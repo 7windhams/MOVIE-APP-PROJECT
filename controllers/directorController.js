@@ -1,32 +1,23 @@
-const db = require('../config/database');
+// Temporary mock data while you set up MySQL
+const mockDirectors = [
+    { director_id: 1, director_name: 'Christopher Nolan', director_birth_year: 1970, director_nationality: 'British' },
+    { director_id: 2, director_name: 'Steven Spielberg', director_birth_year: 1946, director_nationality: 'American' },
+    { director_id: 3, director_name: 'Martin Scorsese', director_birth_year: 1942, director_nationality: 'American' }
+];
 
 const getAllDirectors = async (req, res) => {
-    try {
-        const [directors] = await db.pool.execute('SELECT * FROM director ORDER BY director_name');
-        res.json(directors);
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({ error: 'Failed to get directors' });
-    }
+    res.json(mockDirectors);
 };
 
 const getDirectorById = async (req, res) => {
     const directorId = req.params.id;
+    const director = mockDirectors.find(d => d.director_id == directorId);
     
-    try {
-        const [result] = await db.pool.execute(
-            'SELECT * FROM director WHERE director_id = ?', 
-            [directorId]
-        );
-        
-        if (!result.length) {
-            return res.status(404).json({ message: 'Director not found' });
-        }
-        
-        res.json(result[0]);
-    } catch (err) {
-        res.status(500).send('Error retrieving director');
+    if (!director) {
+        return res.status(404).json({ message: 'Director not found' });
     }
+    
+    res.json(director);
 };
 
 // Get directors sorted by specific field
