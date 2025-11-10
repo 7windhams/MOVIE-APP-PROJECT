@@ -1,14 +1,10 @@
-# Movie Database API
+# Susan's Movie Database Project 🎬
 
-A RESTful API built with Node.js and Express for managing a movie database with actors, directors, genres, movies, productions, and streaming platforms.
+Hey! This is my movie database API that I built during my time at Mississippi Coding Academies. It's been quite a journey learning backend development, and I'm excited to share this project with you!
 
-## Features
+## What This Project Does
 
-- Complete CRUD operations for movie database entities
-- Complex relational queries using pivot tables
-- Sorting and filtering capabilities
-- Environment-based configuration
-- Security middleware (Helmet, CORS)
+This is a web application that manages movie data - think actors, directors, movies, genres, and all that good stuff. I built it using Node.js and MySQL, and honestly, I learned a ton while making it.
 - Error handling and validation
 - MySQL database integration
 

@@ -2,12 +2,16 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const path = require('path');
+const https = require('https');
+const http = require('http');
+const fs = require('fs');
 require('dotenv').config();
 
 // Susan's Movie Database API - built during coding bootcamp
 // This project showcases my backend development skills
 const app = express();
-const PORT = process.env.PORT || 3002; // Changed to 3002
+const HTTP_PORT = process.env.HTTP_PORT || 3002;
+const HTTPS_PORT = process.env.HTTPS_PORT || 3443;
 
 // View engine setup
 app.set('view engine', 'ejs');
@@ -128,8 +132,37 @@ app.get('/test-db', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+// Function to create HTTPS server if certificates exist
+function startServers() {
+    // Start HTTP server
+    const httpServer = http.createServer(app);
+    httpServer.listen(HTTP_PORT, () => {
+        console.log(`🌐 HTTP Server running on port ${HTTP_PORT}`);
+        console.log(`   Visit: http://localhost:${HTTP_PORT}`);
+    });
+
+    // Try to start HTTPS server if certificates exist
+    try {
+        const certPath = path.join(__dirname, 'certificates');
+        const privateKey = fs.readFileSync(path.join(certPath, 'private.key'), 'utf8');
+        const certificate = fs.readFileSync(path.join(certPath, 'certificate.crt'), 'utf8');
+        
+        const credentials = {
+            key: privateKey,
+            cert: certificate
+        };
+
+        const httpsServer = https.createServer(credentials, app);
+        httpsServer.listen(HTTPS_PORT, () => {
+            console.log(`🔒 HTTPS Server running on port ${HTTPS_PORT}`);
+            console.log(`   Visit: https://localhost:${HTTPS_PORT}`);
+        });
+    } catch (error) {
+        console.log(`⚠️  HTTPS certificates not found. Only HTTP server started.`);
+        console.log(`   To enable HTTPS, run: npm run create-cert`);
+    }
+}
+
+startServers();
 
 module.exports = app;
