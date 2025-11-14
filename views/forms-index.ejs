@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Movie Database</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            border-radius: 10px;
+        }
+        
+        .nav {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 0 1rem;
+        }
+        
+        .nav a {
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            background: #667eea;
+            color: white;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+        
+        .nav a:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+        
+        .content {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-size: 2.5rem;
+        }
+        
+        .forms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .form-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        
+        .form-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .form-card h3 {
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+        
+        .form-card p {
+            margin-bottom: 1.5rem;
+            opacity: 0.9;
+        }
+        
+        .form-card a {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .form-card a:hover {
+            background: #f0f0f0;
+            transform: translateY(-2px);
+        }
+        
+        .api-info {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            border-radius: 5px;
+        }
+        
+        .api-info h3 {
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+        
+        .api-endpoints {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .api-endpoints li {
+            margin: 0.5rem 0;
+            padding: 0.5rem;
+            background: white;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        
+        .method {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+            color: white;
+            font-weight: bold;
+            margin-right: 0.5rem;
+            min-width: 60px;
+            text-align: center;
+        }
+        
+        .method.post {
+            background: #28a745;
+        }
+        
+        .method.patch {
+            background: #ffc107;
+        }
+        
+        .method.get {
+            background: #007bff;
+        }
+        
+        @media (max-width: 768px) {
+            .nav {
+                flex-direction: column;
+                align-items: center;
+                gap: 0.5rem;
+            }
+            
+            .nav a {
+                width: 200px;
+                text-align: center;
+            }
+            
+            .forms-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <nav class="nav">
+                <a href="/">Home</a>
+                <a href="/actors">Actors</a>
+                <a href="/directors">Directors</a>
+                <a href="/genres">Genres</a>
+                <a href="/movies">Movies</a>
+                <a href="/productions">Productions</a>
+                <a href="/streaming-platforms">Streaming Platforms</a>
+                <a href="/forms" style="background: #28a745;">Forms</a>
+            </nav>
+        </div>
+        
+        <div class="content">
+            <h1>Data Entry Forms</h1>
+            <p style="text-align: center; font-size: 1.2rem; margin-bottom: 2rem;">
+                Add new records to your movie database using the forms below, or test the API endpoints directly with Postman.
+            </p>
+            
+            <div class="forms-grid">
+                <div class="form-card">
+                    <h3>🎭 Add Actor</h3>
+                    <p>Create a new actor record with name, birth year, and nationality information.</p>
+                    <a href="/forms/actor">Add New Actor</a>
+                </div>
+                
+                <div class="form-card">
+                    <h3>🎬 Add Director</h3>
+                    <p>Create a new director record with personal and professional details.</p>
+                    <a href="/forms/director">Add New Director</a>
+                </div>
+                
+                <div class="form-card">
+                    <h3>🎪 Add Genre</h3>
+                    <p>Define new movie genres with names and detailed descriptions.</p>
+                    <a href="/forms/genre">Add New Genre</a>
+                </div>
+                
+                <div class="form-card">
+                    <h3>🏭 Add Production</h3>
+                    <p>Register production companies with founding information and headquarters.</p>
+                    <a href="/forms/production">Add New Production</a>
+                </div>
+                
+                <div class="form-card">
+                    <h3>🎥 Add Movie</h3>
+                    <p>Create comprehensive movie records with all related information.</p>
+                    <a href="/forms/movie">Add New Movie</a>
+                </div>
+            </div>
+            
+            <div class="api-info">
+                <h3>API Endpoints for Testing</h3>
+                <p>Use these endpoints with Postman or any API testing tool:</p>
+                <ul class="api-endpoints">
+                    <li><span class="method post">POST</span> http://localhost:3002/api/actors</li>
+                    <li><span class="method patch">PATCH</span> http://localhost:3002/api/actors/:id</li>
+                    <li><span class="method post">POST</span> http://localhost:3002/api/directors</li>
+                    <li><span class="method patch">PATCH</span> http://localhost:3002/api/directors/:id</li>
+                    <li><span class="method post">POST</span> http://localhost:3002/api/genres</li>
+                    <li><span class="method patch">PATCH</span> http://localhost:3002/api/genres/:id</li>
+                    <li><span class="method post">POST</span> http://localhost:3002/api/productions</li>
+                    <li><span class="method patch">PATCH</span> http://localhost:3002/api/productions/:id</li>
+                    <li><span class="method post">POST</span> http://localhost:3002/api/movies</li>
+                    <li><span class="method patch">PATCH</span> http://localhost:3002/api/movies/:id</li>
+                    <li><span class="method get">GET</span> http://localhost:3002/test-db (Test database connection)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

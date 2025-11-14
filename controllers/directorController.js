@@ -1,57 +1,51 @@
-// Temporary mock data while you set up MySQL
-const mockDirectors = [
-    { director_id: 1, director_name: 'Christopher Nolan', director_birth_year: 1970, director_nationality: 'British' },
-    { director_id: 2, director_name: 'Steven Spielberg', director_birth_year: 1946, director_nationality: 'American' },
-    { director_id: 3, director_name: 'Martin Scorsese', director_birth_year: 1942, director_nationality: 'American' }
-];
+const { pool } = require('../config/database');
 
 const getAllDirectors = async (req, res) => {
-    res.json(mockDirectors);
+    try {
+        const [directors] = await pool.execute('SELECT * FROM director ORDER BY director_name');
+        res.json(directors);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching directors', error: error.message });
+    }
 };
 
 const getDirectorById = async (req, res) => {
-    const directorId = req.params.id;
-    const director = mockDirectors.find(d => d.director_id == directorId);
-    
-    if (!director) {
-        return res.status(404).json({ message: 'Director not found' });
+    try {
+        const { id } = req.params;
+        const [directors] = await pool.execute('SELECT * FROM director WHERE director_id = ?', [id]);
+        
+        if (directors.length === 0) {
+            return res.status(404).json({ message: 'Director not found' });
+        }
+        
+        res.json(directors[0]);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching director', error: error.message });
     }
-    
-    res.json(director);
 };
 
-// Get directors sorted by specific field
 const getDirectorsSorted = async (req, res) => {
     try {
         const { sortBy = 'director_name', order = 'ASC' } = req.query;
+        const validSortFields = ['director_name', 'director_birth_year', 'director_nationality'];
+        const validOrders = ['ASC', 'DESC'];
         
-        // Validate sort field to prevent SQL injection
-        const allowedSortFields = ['director_id', 'director_name', 'director_birth_year', 'director_nationality'];
-        const validSortField = allowedSortFields.includes(sortBy) ? sortBy : 'director_name';
-        const validOrder = ['ASC', 'DESC'].includes(order.toUpperCase()) ? order.toUpperCase() : 'ASC';
+        const sortField = validSortFields.includes(sortBy) ? sortBy : 'director_name';
+        const sortOrder = validOrders.includes(order.toUpperCase()) ? order.toUpperCase() : 'ASC';
         
-        const [rows] = await pool.execute(
-            `SELECT * FROM director ORDER BY ${validSortField} ${validOrder}`
-        );
-        
+        const [directors] = await pool.execute(`SELECT * FROM director ORDER BY ${sortField} ${sortOrder}`);
         res.json({
             success: true,
-            count: rows.length,
-            sortedBy: validSortField,
-            order: validOrder,
-            data: rows
+            count: directors.length,
+            sortedBy: sortField,
+            order: sortOrder,
+            data: directors
         });
     } catch (error) {
-        console.error('Error fetching sorted directors:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to fetch sorted directors',
-            message: error.message
-        });
+        res.status(500).json({ message: 'Error fetching sorted directors', error: error.message });
     }
 };
 
-// Custom endpoint: Get directors by birth year range
 const getDirectorsByBirthYearRange = async (req, res) => {
     try {
         const { startYear, endYear } = req.query;
@@ -63,7 +57,7 @@ const getDirectorsByBirthYearRange = async (req, res) => {
             });
         }
         
-        const [rows] = await pool.execute(
+        const [directors] = await pool.execute(
             'SELECT * FROM director WHERE director_birth_year BETWEEN ? AND ? ORDER BY director_birth_year ASC, director_name ASC',
             [startYear, endYear]
         );
@@ -71,16 +65,65 @@ const getDirectorsByBirthYearRange = async (req, res) => {
         res.json({
             success: true,
             birthYearRange: `${startYear} - ${endYear}`,
-            count: rows.length,
-            data: rows
+            count: directors.length,
+            data: directors
         });
     } catch (error) {
-        console.error('Error fetching directors by birth year range:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to fetch directors by birth year range',
-            message: error.message
+        res.status(500).json({ message: 'Error fetching directors by birth year range', error: error.message });
+    }
+};
+
+const createDirector = async (req, res) => {
+    try {
+        const { director_name, director_birth_year, director_nationality } = req.body;
+        
+        if (!director_name) {
+            return res.status(400).json({ message: 'Director name is required' });
+        }
+        
+        const [result] = await pool.execute(
+            'INSERT INTO director (director_name, director_birth_year, director_nationality) VALUES (?, ?, ?)',
+            [director_name, director_birth_year || null, director_nationality || null]
+        );
+        
+        const [newDirector] = await pool.execute('SELECT * FROM director WHERE director_id = ?', [result.insertId]);
+        
+        res.status(201).json({
+            message: 'Director created successfully',
+            director: newDirector[0]
         });
+    } catch (error) {
+        res.status(500).json({ message: 'Error creating director', error: error.message });
+    }
+};
+
+const updateDirector = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { director_name, director_birth_year, director_nationality } = req.body;
+        
+        const [existingDirector] = await pool.execute('SELECT * FROM director WHERE director_id = ?', [id]);
+        if (existingDirector.length === 0) {
+            return res.status(404).json({ message: 'Director not found' });
+        }
+        
+        if (!director_name) {
+            return res.status(400).json({ message: 'Director name is required' });
+        }
+        
+        await pool.execute(
+            'UPDATE director SET director_name = ?, director_birth_year = ?, director_nationality = ? WHERE director_id = ?',
+            [director_name, director_birth_year || null, director_nationality || null, id]
+        );
+        
+        const [updatedDirector] = await pool.execute('SELECT * FROM director WHERE director_id = ?', [id]);
+        
+        res.json({
+            message: 'Director updated successfully',
+            director: updatedDirector[0]
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Error updating director', error: error.message });
     }
 };
 
@@ -88,5 +131,7 @@ module.exports = {
     getAllDirectors,
     getDirectorById,
     getDirectorsSorted,
-    getDirectorsByBirthYearRange
+    getDirectorsByBirthYearRange,
+    createDirector,
+    updateDirector
 };

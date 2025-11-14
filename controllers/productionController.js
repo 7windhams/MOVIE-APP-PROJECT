@@ -1,93 +1,54 @@
 const { pool } = require('../config/database');
 
-// Get all productions
 const getAllProductions = async (req, res) => {
     try {
-        const [rows] = await pool.execute(
-            'SELECT * FROM production ORDER BY production_name ASC'
-        );
-        
-        res.json({
-            success: true,
-            count: rows.length,
-            data: rows
-        });
+        const [productions] = await pool.execute('SELECT * FROM production ORDER BY production_name ASC');
+        res.json(productions);
     } catch (error) {
-        console.error('Error fetching all productions:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to fetch productions',
-            message: error.message
-        });
+        res.status(500).json({ message: 'Error fetching productions', error: error.message });
     }
 };
 
-// Get production by ID
 const getProductionById = async (req, res) => {
     try {
         const { id } = req.params;
+        const [productions] = await pool.execute('SELECT * FROM production WHERE production_id = ?', [id]);
         
-        const [rows] = await pool.execute(
-            'SELECT * FROM production WHERE production_id = ?',
-            [id]
-        );
-        
-        if (rows.length === 0) {
-            return res.status(404).json({
-                success: false,
-                error: 'Production not found'
-            });
+        if (productions.length === 0) {
+            return res.status(404).json({ message: 'Production not found' });
         }
         
-        res.json({
-            success: true,
-            data: rows[0]
-        });
+        res.json(productions[0]);
     } catch (error) {
-        console.error('Error fetching production by ID:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to fetch production',
-            message: error.message
-        });
+        res.status(500).json({ message: 'Error fetching production', error: error.message });
     }
 };
 
-// Get productions sorted by specific field
 const getProductionsSorted = async (req, res) => {
     try {
         const { sortBy = 'production_name', order = 'ASC' } = req.query;
+        const validSortFields = ['production_name', 'production_founded_year', 'production_headquarters'];
+        const validOrders = ['ASC', 'DESC'];
         
-        // Validate sort field to prevent SQL injection
-        const allowedSortFields = ['production_id', 'production_name', 'production_founded_year', 'production_headquarters'];
-        const validSortField = allowedSortFields.includes(sortBy) ? sortBy : 'production_name';
-        const validOrder = ['ASC', 'DESC'].includes(order.toUpperCase()) ? order.toUpperCase() : 'ASC';
+        const sortField = validSortFields.includes(sortBy) ? sortBy : 'production_name';
+        const sortOrder = validOrders.includes(order.toUpperCase()) ? order.toUpperCase() : 'ASC';
         
-        const [rows] = await pool.execute(
-            `SELECT * FROM production ORDER BY ${validSortField} ${validOrder}`
-        );
-        
+        const [productions] = await pool.execute(`SELECT * FROM production ORDER BY ${sortField} ${sortOrder}`);
         res.json({
             success: true,
-            count: rows.length,
-            sortedBy: validSortField,
-            order: validOrder,
-            data: rows
+            count: productions.length,
+            sortedBy: sortField,
+            order: sortOrder,
+            data: productions
         });
     } catch (error) {
-        console.error('Error fetching sorted productions:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to fetch sorted productions',
-            message: error.message
-        });
+        res.status(500).json({ message: 'Error fetching sorted productions', error: error.message });
     }
 };
 
-// Custom endpoint: Get productions with movie count and latest movie year
 const getProductionsWithMovieStats = async (req, res) => {
     try {
-        const [rows] = await pool.execute(`
+        const [productions] = await pool.execute(`
             SELECT 
                 p.*,
                 COUNT(m.movie_id) as movie_count,
@@ -101,16 +62,65 @@ const getProductionsWithMovieStats = async (req, res) => {
         
         res.json({
             success: true,
-            count: rows.length,
-            data: rows
+            count: productions.length,
+            data: productions
         });
     } catch (error) {
-        console.error('Error fetching productions with movie stats:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to fetch productions with movie statistics',
-            message: error.message
+        res.status(500).json({ message: 'Error fetching productions with movie stats', error: error.message });
+    }
+};
+
+const createProduction = async (req, res) => {
+    try {
+        const { production_name, production_founded_year, production_headquarters } = req.body;
+        
+        if (!production_name) {
+            return res.status(400).json({ message: 'Production name is required' });
+        }
+        
+        const [result] = await pool.execute(
+            'INSERT INTO production (production_name, production_founded_year, production_headquarters) VALUES (?, ?, ?)',
+            [production_name, production_founded_year || null, production_headquarters || null]
+        );
+        
+        const [newProduction] = await pool.execute('SELECT * FROM production WHERE production_id = ?', [result.insertId]);
+        
+        res.status(201).json({
+            message: 'Production created successfully',
+            production: newProduction[0]
         });
+    } catch (error) {
+        res.status(500).json({ message: 'Error creating production', error: error.message });
+    }
+};
+
+const updateProduction = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { production_name, production_founded_year, production_headquarters } = req.body;
+        
+        const [existingProduction] = await pool.execute('SELECT * FROM production WHERE production_id = ?', [id]);
+        if (existingProduction.length === 0) {
+            return res.status(404).json({ message: 'Production not found' });
+        }
+        
+        if (!production_name) {
+            return res.status(400).json({ message: 'Production name is required' });
+        }
+        
+        await pool.execute(
+            'UPDATE production SET production_name = ?, production_founded_year = ?, production_headquarters = ? WHERE production_id = ?',
+            [production_name, production_founded_year || null, production_headquarters || null, id]
+        );
+        
+        const [updatedProduction] = await pool.execute('SELECT * FROM production WHERE production_id = ?', [id]);
+        
+        res.json({
+            message: 'Production updated successfully',
+            production: updatedProduction[0]
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Error updating production', error: error.message });
     }
 };
 
@@ -118,5 +128,7 @@ module.exports = {
     getAllProductions,
     getProductionById,
     getProductionsSorted,
-    getProductionsWithMovieStats
+    getProductionsWithMovieStats,
+    createProduction,
+    updateProduction
 };

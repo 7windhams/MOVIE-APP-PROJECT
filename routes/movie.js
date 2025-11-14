@@ -4,7 +4,9 @@ const {
     getAllMovies,
     getMovieById,
     getMoviesSorted,
-    getMoviesByGenre
+    getMoviesByGenre,
+    createMovie,
+    updateMovie
 } = require('../controllers/movieController');
 
 // GET /api/movies - Get all movies
@@ -18,5 +20,11 @@ router.get('/genre/:genre', getMoviesByGenre);
 
 // GET /api/movies/:id - Get movie by ID with all related data (must be last to avoid conflicts)
 router.get('/:id', getMovieById);
+
+// POST /api/movies - Create new movie
+router.post('/', createMovie);
+
+// PATCH /api/movies/:id - Update movie
+router.patch('/:id', updateMovie);
 
 module.exports = router;

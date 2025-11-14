@@ -4,7 +4,9 @@ const {
     getAllProductions,
     getProductionById,
     getProductionsSorted,
-    getProductionsWithMovieStats
+    getProductionsWithMovieStats,
+    createProduction,
+    updateProduction
 } = require('../controllers/productionController');
 
 // GET /api/productions - Get all productions
@@ -18,5 +20,11 @@ router.get('/with-movie-stats', getProductionsWithMovieStats);
 
 // GET /api/productions/:id - Get production by ID (must be last to avoid conflicts)
 router.get('/:id', getProductionById);
+
+// POST /api/productions - Create new production
+router.post('/', createProduction);
+
+// PATCH /api/productions/:id - Update production
+router.patch('/:id', updateProduction);
 
 module.exports = router;

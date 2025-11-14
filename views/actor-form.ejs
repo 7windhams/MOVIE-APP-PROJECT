@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Movie Database</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            border-radius: 10px;
+        }
+        
+        .nav {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 0 1rem;
+        }
+        
+        .nav a {
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            background: #667eea;
+            color: white;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+        
+        .nav a:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+        
+        .forms-nav {
+            background: #28a745;
+        }
+        
+        .content {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-size: 2.5rem;
+        }
+        
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        input[type="text"],
+        input[type="number"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+        }
+        
+        .required {
+            color: #dc3545;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+        
+        .form-info {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 5px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-info h3 {
+            color: #0066cc;
+            margin-bottom: 0.5rem;
+        }
+        
+        .api-example {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 1rem;
+            margin-top: 2rem;
+            border-radius: 5px;
+        }
+        
+        .api-example h4 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        
+        pre {
+            background: #f1f3f4;
+            padding: 1rem;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .nav {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .nav a {
+                width: 200px;
+                text-align: center;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <nav class="nav">
+                <a href="/">Home</a>
+                <a href="/actors">Actors</a>
+                <a href="/directors">Directors</a>
+                <a href="/genres">Genres</a>
+                <a href="/movies">Movies</a>
+                <a href="/productions">Productions</a>
+                <a href="/streaming-platforms">Streaming Platforms</a>
+                <a href="/forms" class="forms-nav">Forms</a>
+            </nav>
+        </div>
+        
+        <div class="content">
+            <h1><%= title %></h1>
+            
+            <div class="form-info">
+                <h3>🎭 Actor Information</h3>
+                <p>Fill out the form below to <%= isEdit ? 'update' : 'add a new' %> actor to the movie database. Only the actor name is required.</p>
+            </div>
+            
+            <div class="form-container">
+                <form action="/forms/actor<%= isEdit ? '/' + actor.actor_id : '' %>" method="POST">
+                    <div class="form-group">
+                        <label for="actor_name">Actor Name <span class="required">*</span></label>
+                        <input type="text" id="actor_name" name="actor_name" 
+                               value="<%= isEdit ? actor.actor_name : '' %>" 
+                               placeholder="Enter actor's full name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="actor_birth_year">Birth Year</label>
+                        <input type="number" id="actor_birth_year" name="actor_birth_year" 
+                               value="<%= isEdit && actor.actor_birth_year ? actor.actor_birth_year : '' %>" 
+                               placeholder="e.g., 1974" min="1800" max="2023">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="actor_nationality">Nationality</label>
+                        <input type="text" id="actor_nationality" name="actor_nationality" 
+                               value="<%= isEdit ? (actor.actor_nationality || '') : '' %>" 
+                               placeholder="e.g., American, British, Canadian">
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <%= isEdit ? 'Update' : 'Add' %> Actor
+                        </button>
+                        <a href="/actors" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="api-example">
+                <h4>API Endpoint Example</h4>
+                <p><strong><%= isEdit ? 'PATCH' : 'POST' %>:</strong> <code>http://localhost:3002/api/actors<%= isEdit ? '/' + actor.actor_id : '' %></code></p>
+                <pre>{
+  "actor_name": "Leonardo DiCaprio",
+  "actor_birth_year": 1974,
+  "actor_nationality": "American"
+}</pre>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

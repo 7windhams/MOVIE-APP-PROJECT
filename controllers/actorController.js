@@ -1,53 +1,122 @@
-// Temporary mock data while you set up MySQL
-const mockActors = [
-    { actor_id: 1, actor_name: 'Tom Hanks', actor_birth_year: 1956, actor_nationality: 'American' },
-    { actor_id: 2, actor_name: 'Leonardo DiCaprio', actor_birth_year: 1974, actor_nationality: 'American' },
-    { actor_id: 3, actor_name: 'Meryl Streep', actor_birth_year: 1949, actor_nationality: 'American' }
-];
+const { pool } = require('../config/database');
 
 const getAllActors = async (req, res) => {
-    res.json(mockActors);
+    try {
+        const [actors] = await pool.execute('SELECT * FROM actor ORDER BY actor_name');
+        res.json(actors);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching actors', error: error.message });
+    }
 };
 
 const getActorById = async (req, res) => {
-    const { id } = req.params;
-    const actor = mockActors.find(a => a.actor_id == id);
-    
-    if (!actor) {
-        return res.status(404).json({ message: 'Actor not found' });
+    try {
+        const { id } = req.params;
+        const [actors] = await pool.execute('SELECT * FROM actor WHERE actor_id = ?', [id]);
+        
+        if (actors.length === 0) {
+            return res.status(404).json({ message: 'Actor not found' });
+        }
+        
+        res.json(actors[0]);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching actor', error: error.message });
     }
-    
-    res.json(actor);
 };
 
 const getActorsSorted = async (req, res) => {
-    const { sortBy = 'actor_name', order = 'ASC' } = req.query;
-    
-    let sortedActors = [...mockActors];
-    
-    if (sortBy === 'actor_name') {
-        sortedActors.sort((a, b) => {
-            return order === 'DESC' 
-                ? b.actor_name.localeCompare(a.actor_name)
-                : a.actor_name.localeCompare(b.actor_name);
-        });
+    try {
+        const { sortBy = 'actor_name', order = 'ASC' } = req.query;
+        const validSortFields = ['actor_name', 'actor_birth_year', 'actor_nationality'];
+        const validOrders = ['ASC', 'DESC'];
+        
+        const sortField = validSortFields.includes(sortBy) ? sortBy : 'actor_name';
+        const sortOrder = validOrders.includes(order.toUpperCase()) ? order.toUpperCase() : 'ASC';
+        
+        const [actors] = await pool.execute(`SELECT * FROM actor ORDER BY ${sortField} ${sortOrder}`);
+        res.json(actors);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching sorted actors', error: error.message });
     }
-    
-    res.json(sortedActors);
 };
 
 const getActorsByNationality = async (req, res) => {
-    const { nationality } = req.params;
-    const filteredActors = mockActors.filter(actor => 
-        actor.actor_nationality.toLowerCase().includes(nationality.toLowerCase())
-    );
-    
-    res.json(filteredActors);
+    try {
+        const { nationality } = req.params;
+        const [actors] = await pool.execute(
+            'SELECT * FROM actor WHERE actor_nationality LIKE ? ORDER BY actor_name',
+            [`%${nationality}%`]
+        );
+        res.json(actors);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching actors by nationality', error: error.message });
+    }
+};
+
+const createActor = async (req, res) => {
+    try {
+        const { actor_name, actor_birth_year, actor_nationality } = req.body;
+        
+        // Validate required fields
+        if (!actor_name) {
+            return res.status(400).json({ message: 'Actor name is required' });
+        }
+        
+        const [result] = await pool.execute(
+            'INSERT INTO actor (actor_name, actor_birth_year, actor_nationality) VALUES (?, ?, ?)',
+            [actor_name, actor_birth_year || null, actor_nationality || null]
+        );
+        
+        // Fetch the created actor
+        const [newActor] = await pool.execute('SELECT * FROM actor WHERE actor_id = ?', [result.insertId]);
+        
+        res.status(201).json({
+            message: 'Actor created successfully',
+            actor: newActor[0]
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Error creating actor', error: error.message });
+    }
+};
+
+const updateActor = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { actor_name, actor_birth_year, actor_nationality } = req.body;
+        
+        // Check if actor exists
+        const [existingActor] = await pool.execute('SELECT * FROM actor WHERE actor_id = ?', [id]);
+        if (existingActor.length === 0) {
+            return res.status(404).json({ message: 'Actor not found' });
+        }
+        
+        // Validate required fields
+        if (!actor_name) {
+            return res.status(400).json({ message: 'Actor name is required' });
+        }
+        
+        await pool.execute(
+            'UPDATE actor SET actor_name = ?, actor_birth_year = ?, actor_nationality = ? WHERE actor_id = ?',
+            [actor_name, actor_birth_year || null, actor_nationality || null, id]
+        );
+        
+        // Fetch the updated actor
+        const [updatedActor] = await pool.execute('SELECT * FROM actor WHERE actor_id = ?', [id]);
+        
+        res.json({
+            message: 'Actor updated successfully',
+            actor: updatedActor[0]
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Error updating actor', error: error.message });
+    }
 };
 
 module.exports = {
     getAllActors,
     getActorById,
     getActorsSorted,
-    getActorsByNationality
+    getActorsByNationality,
+    createActor,
+    updateActor
 };
